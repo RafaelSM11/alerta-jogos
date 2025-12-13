@@ -15,7 +15,7 @@ async function registerPush() {
     }
 
     const token = await messaging.getToken({
-        vapidKey: "SUA_VAPID_KEY_AQUI"
+        vapidKey: "BMaZ5ha0mJCVoCwz1ca-nHws4kzH9jKDK3WrmlfDgyNA0ln6zMIZFEdQqI990ninnT9BUY4R3CAv2VpQJa9cn-o"
     });
 
     await db.collection("tokens").doc(token).set({
