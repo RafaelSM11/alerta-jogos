@@ -43,7 +43,7 @@ const permission = await Notification.requestPermission();
 
 if (permission === "granted") {
   const token = await getToken(messaging, {
-    vapidKey: "SUA_VAPID_KEY_AQUI",
+    vapidKey: "BMaZ5ha0mJCVoCwz1ca-nHws4kzH9jKDK3WrmlfDgyNA0ln6zMIZFEdQqI990ninnT9BUY4R3CAv2VpQJa9cn-o",
     serviceWorkerRegistration: swRegistration
   });
 
@@ -138,3 +138,4 @@ window.deleteGame = function (id) {
 
 // ================================
 renderGames();
+
