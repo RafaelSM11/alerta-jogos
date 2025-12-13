@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Alerta de Jogos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#22c55e">
+
+</head>
+<body>
+
+    <h1>⚽ Alerta de Jogos de Futebol</h1>
+
+    <div class="form">
+    <input type="text" id="gameName" placeholder="Nome do jogo (Ex: Flamengo x Palmeiras)">
+
+    <input type="datetime-local" id="gameTime">
+
+    <input type="number" id="alertBefore" placeholder="Avisar quantos minutos antes?" min="0">
+
+    <button onclick="addGame()">Cadastrar Jogo</button>
+    </div>
+
+
+    <h2>Jogos cadastrados</h2>
+    <ul id="gameList"></ul>
+
+    <script src="script.js"></script>
+</body>
+</html>
