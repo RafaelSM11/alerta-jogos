@@ -1,98 +1,81 @@
-let games = JSON.parse(localStorage.getItem("games")) || [];
+const db = firebase.firestore();
+const messaging = firebase.messaging();
 
-// Permissão de notificação
-if ("Notification" in window) {
-    Notification.requestPermission();
-}
+const gameName = document.getElementById("gameName");
+const gameTime = document.getElementById("gameTime");
+const alertBefore = document.getElementById("alertBefore");
+const gameList = document.getElementById("gameList");
 
-// Registrar Service Worker
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").then(() => {
-        console.log("Service Worker registrado");
+// 🔔 REGISTRAR PUSH
+async function registerPush() {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+        alert("Permissão de notificação negada");
+        return;
+    }
+
+    const token = await messaging.getToken({
+        vapidKey: "SUA_VAPID_KEY_AQUI"
     });
+
+    await db.collection("tokens").doc(token).set({
+        token,
+        createdAt: new Date()
+    });
+
+    console.log("Push registrado:", token);
 }
 
-function addGame() {
-    const name = gameName.value;
-    const time = gameTime.value;
-    const alertBefore = parseInt(alertBefore.value);
+registerPush();
 
-    if (!name || !time || isNaN(alertBefore)) {
+// ➕ ADICIONAR JOGO
+async function addGame() {
+    if (!gameName.value || !gameTime.value || !alertBefore.value) {
         alert("Preencha todos os campos");
         return;
     }
 
-    const game = {
-        id: Date.now(),
-        name,
-        time,
-        alertBefore,
-        notified: false
-    };
+    await db.collection("games").add({
+        name: gameName.value,
+        time: new Date(gameTime.value),
+        alertBefore: Number(alertBefore.value),
+        notified: false,
+        createdAt: new Date()
+    });
 
-    games.push(game);
-    localStorage.setItem("games", JSON.stringify(games));
-    renderGames();
+    gameName.value = "";
+    gameTime.value = "";
+    alertBefore.value = "";
 }
 
-function renderGames() {
-    gameList.innerHTML = "";
+// 📋 LISTAR JOGOS
+db.collection("games")
+  .orderBy("time")
+  .onSnapshot(snapshot => {
+      gameList.innerHTML = "";
 
-    games.forEach(game => {
-        const alertTime = new Date(
-            new Date(game.time).getTime() - game.alertBefore * 60000
-        );
+      snapshot.forEach(doc => {
+          const game = doc.data();
 
-        const li = document.createElement("li");
-        li.innerHTML = `
+          const alertTime = new Date(
+              game.time.toDate().getTime() - game.alertBefore * 60000
+          );
+
+          const li = document.createElement("li");
+          li.innerHTML = `
             <div>
-                <strong>${game.name}</strong><br>
-                Jogo: ${new Date(game.time).toLocaleString()}<br>
-                Alerta: ${alertTime.toLocaleString()}
+              <strong>${game.name}</strong><br>
+              Jogo: ${game.time.toDate().toLocaleString()}<br>
+              Alerta: ${alertTime.toLocaleString()}
             </div>
-            <button onclick="deleteGame(${game.id})">Excluir</button>
-        `;
-        gameList.appendChild(li);
-    });
+            <button onclick="deleteGame('${doc.id}')">Excluir</button>
+          `;
+
+          gameList.appendChild(li);
+      });
+  });
+
+// ❌ EXCLUIR JOGO
+async function deleteGame(id) {
+    await db.collection("games").doc(id).delete();
 }
-
-function deleteGame(id) {
-    games = games.filter(g => g.id !== id);
-    localStorage.setItem("games", JSON.stringify(games));
-    renderGames();
-}
-
-// Recebe mensagem do Service Worker
-navigator.serviceWorker.addEventListener("message", event => {
-    if (event.data === "CHECK_GAMES") {
-        checkAlerts();
-    }
-});
-
-function checkAlerts() {
-    const now = Date.now();
-    let updated = false;
-
-    games.forEach(game => {
-        const alertTime =
-            new Date(game.time).getTime() - game.alertBefore * 60000;
-
-        if (!game.notified && now >= alertTime) {
-            navigator.serviceWorker.ready.then(reg => {
-                reg.showNotification("⚽ Alerta de Jogo", {
-                    body: game.name,
-                    icon: "icon-192.png"
-                });
-            });
-
-            game.notified = true;
-            updated = true;
-        }
-    });
-
-    if (updated) {
-        localStorage.setItem("games", JSON.stringify(games));
-    }
-}
-
-renderGames();

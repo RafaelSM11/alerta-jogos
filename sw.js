@@ -1,48 +1,23 @@
-const CACHE_NAME = "alerta-jogos-v2";
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js");
 
-const FILES_TO_CACHE = [
-    "./",
-    "./index.html",
-    "./style.css",
-    "./script.js",
-    "./manifest.json",
-    "./icon-192.png",
-    "./icon-512.png"
-];
-
-self.addEventListener("install", event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-    );
-    self.skipWaiting();
+firebase.initializeApp({
+  apiKey: "AIzaSyDDpMU4VPe2La1KRUBSlpcivOZNn8ioo",
+  authDomain: "alerta-jogos.firebaseapp.com",
+  projectId: "alerta-jogos",
+  storageBucket: "alerta-jogos.appspot.com",
+  messagingSenderId: "944894322098",
+  appId: "1:944894322098:web:e8c3a91f2e5525e1a370ab"
 });
 
-self.addEventListener("activate", event => {
-    event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(
-                keys.map(key => {
-                    if (key !== CACHE_NAME) {
-                        return caches.delete(key);
-                    }
-                })
-            )
-        )
-    );
-    self.clients.claim();
-});
+const messaging = firebase.messaging();
 
-self.addEventListener("fetch", event => {
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request);
-        })
-    );
-});
-
-self.addEventListener("notificationclick", event => {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow("./")
+messaging.onBackgroundMessage(payload => {
+    self.registration.showNotification(
+        payload.notification.title,
+        {
+            body: payload.notification.body,
+            icon: "/icon-192.png"
+        }
     );
 });
