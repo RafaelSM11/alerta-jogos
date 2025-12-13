@@ -1,86 +1,140 @@
-const db = firebase.firestore();
-const messaging = firebase.messaging();
+// ================================
+// FIREBASE IMPORTS (CDN MODULE)
+// ================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// 🔹 ELEMENTOS
-const gameNameInput = document.getElementById("gameName");
-const gameTimeInput = document.getElementById("gameTime");
-const alertBeforeInput = document.getElementById("alertBefore");
-const gameList = document.getElementById("gameList");
+// ================================
+// FIREBASE CONFIG
+// ================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDDpPMU4VPe2La1KRUBSlpCivxOZNn8io0",
+  authDomain: "alerta-jogos.firebaseapp.com",
+  projectId: "alerta-jogos",
+  storageBucket: "alerta-jogos.appspot.com",
+  messagingSenderId: "944894322098",
+  appId: "1:944894322098:web:e8c3a91f2e5525e1a370ab"
+};
 
-// 🔔 REGISTRAR PUSH
-async function registerPush() {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-        console.log("Permissão de notificação negada");
-        return;
-    }
+// ================================
+// INIT FIREBASE
+// ================================
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+const db = getFirestore(app);
 
-    const token = await messaging.getToken({
-        vapidKey: "SUA_VAPID_KEY_AQUI"
-    });
+// ================================
+// REGISTER SERVICE WORKER (MANUAL)
+// ================================
+let swRegistration = null;
 
-    await db.collection("tokens").doc(token).set({
-        token,
-        createdAt: new Date()
-    });
-
-    console.log("Push registrado:", token);
+if ("serviceWorker" in navigator) {
+  swRegistration = await navigator.serviceWorker.register(
+    "/alerta-jogos/firebase-messaging-sw.js"
+  );
+  console.log("Service Worker registrado");
 }
 
-registerPush();
+// ================================
+// REQUEST NOTIFICATION PERMISSION
+// ================================
+const permission = await Notification.requestPermission();
 
-// ➕ ADICIONAR JOGO
-async function addGame() {
-    if (
-        !gameNameInput.value ||
-        !gameTimeInput.value ||
-        !alertBeforeInput.value
-    ) {
-        alert("Preencha todos os campos");
-        return;
-    }
-
-    await db.collection("games").add({
-        name: gameNameInput.value,
-        time: new Date(gameTimeInput.value),
-        alertBefore: Number(alertBeforeInput.value),
-        notified: false,
-        createdAt: new Date()
-    });
-
-    gameNameInput.value = "";
-    gameTimeInput.value = "";
-    alertBeforeInput.value = "";
-}
-
-// 📋 LISTAR JOGOS
-db.collection("games")
-  .orderBy("time")
-  .onSnapshot(snapshot => {
-      gameList.innerHTML = "";
-
-      snapshot.forEach(doc => {
-          const game = doc.data();
-
-          const alertTime = new Date(
-              game.time.toDate().getTime() - game.alertBefore * 60000
-          );
-
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <div>
-              <strong>${game.name}</strong><br>
-              Jogo: ${game.time.toDate().toLocaleString()}<br>
-              Alerta: ${alertTime.toLocaleString()}
-            </div>
-            <button onclick="deleteGame('${doc.id}')">Excluir</button>
-          `;
-
-          gameList.appendChild(li);
-      });
+if (permission === "granted") {
+  const token = await getToken(messaging, {
+    vapidKey: "SUA_VAPID_KEY_AQUI",
+    serviceWorkerRegistration: swRegistration
   });
 
-// ❌ EXCLUIR JOGO
-async function deleteGame(id) {
-    await db.collection("games").doc(id).delete();
+  if (token) {
+    console.log("Push registrado:", token);
+
+    // Salva token no Firestore
+    await addDoc(collection(db, "tokens"), {
+      token,
+      createdAt: new Date()
+    });
+  }
+} else {
+  alert("Permissão de notificações negada");
 }
+
+// ================================
+// NOTIFICATION FOREGROUND
+// ================================
+onMessage(messaging, payload => {
+  new Notification(payload.notification.title, {
+    body: payload.notification.body,
+    icon: "/alerta-jogos/icon-192.png"
+  });
+});
+
+// ================================
+// JOGOS (LOCAL STORAGE)
+// ================================
+let games = JSON.parse(localStorage.getItem("games")) || [];
+
+window.addGame = function () {
+  const name = document.getElementById("gameName").value;
+  const time = document.getElementById("gameTime").value;
+  const alertBefore = parseInt(document.getElementById("alertBefore").value);
+
+  if (!name || !time || isNaN(alertBefore)) {
+    alert("Preencha todos os campos!");
+    return;
+  }
+
+  const game = {
+    id: Date.now(),
+    name,
+    time,
+    alertBefore
+  };
+
+  games.push(game);
+  localStorage.setItem("games", JSON.stringify(games));
+
+  renderGames();
+
+  document.getElementById("gameName").value = "";
+  document.getElementById("gameTime").value = "";
+  document.getElementById("alertBefore").value = "";
+};
+
+// ================================
+// RENDER LISTA
+// ================================
+function renderGames() {
+  const list = document.getElementById("gameList");
+  list.innerHTML = "";
+
+  games.forEach(game => {
+    const alertTime = new Date(
+      new Date(game.time).getTime() - game.alertBefore * 60000
+    );
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${game.name}</strong><br>
+      Jogo: ${new Date(game.time).toLocaleString()}<br>
+      Alerta: ${alertTime.toLocaleString()}
+      <br>
+      <button onclick="deleteGame(${game.id})">Excluir</button>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+// ================================
+// DELETE JOGO
+// ================================
+window.deleteGame = function (id) {
+  games = games.filter(game => game.id !== id);
+  localStorage.setItem("games", JSON.stringify(games));
+  renderGames();
+};
+
+// ================================
+renderGames();
