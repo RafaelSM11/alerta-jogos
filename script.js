@@ -5,18 +5,20 @@ if ("Notification" in window) {
     Notification.requestPermission();
 }
 
-// Service Worker
+// Registrar Service Worker
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.register("sw.js").then(() => {
+        console.log("Service Worker registrado");
+    });
 }
 
 function addGame() {
-    const name = document.getElementById("gameName").value;
-    const time = document.getElementById("gameTime").value;
-    const alertBefore = parseInt(document.getElementById("alertBefore").value);
+    const name = gameName.value;
+    const time = gameTime.value;
+    const alertBefore = parseInt(alertBefore.value);
 
     if (!name || !time || isNaN(alertBefore)) {
-        alert("Preencha todos os campos!");
+        alert("Preencha todos os campos");
         return;
     }
 
@@ -24,31 +26,24 @@ function addGame() {
         id: Date.now(),
         name,
         time,
-        alertBefore
+        alertBefore,
+        notified: false
     };
 
     games.push(game);
     localStorage.setItem("games", JSON.stringify(games));
-
-    scheduleNotification(game);
     renderGames();
-
-    document.getElementById("gameName").value = "";
-    document.getElementById("gameTime").value = "";
-    document.getElementById("alertBefore").value = "";
 }
 
 function renderGames() {
-    const list = document.getElementById("gameList");
-    list.innerHTML = "";
+    gameList.innerHTML = "";
 
     games.forEach(game => {
-        const li = document.createElement("li");
-
         const alertTime = new Date(
             new Date(game.time).getTime() - game.alertBefore * 60000
         );
 
+        const li = document.createElement("li");
         li.innerHTML = `
             <div>
                 <strong>${game.name}</strong><br>
@@ -57,36 +52,47 @@ function renderGames() {
             </div>
             <button onclick="deleteGame(${game.id})">Excluir</button>
         `;
-
-        list.appendChild(li);
+        gameList.appendChild(li);
     });
 }
 
 function deleteGame(id) {
-    games = games.filter(game => game.id !== id);
+    games = games.filter(g => g.id !== id);
     localStorage.setItem("games", JSON.stringify(games));
     renderGames();
 }
 
-function scheduleNotification(game) {
-    const gameTime = new Date(game.time).getTime();
-    const alertTime = gameTime - game.alertBefore * 60000;
-    const now = Date.now();
-    const delay = alertTime - now;
+// Recebe mensagem do Service Worker
+navigator.serviceWorker.addEventListener("message", event => {
+    if (event.data === "CHECK_GAMES") {
+        checkAlerts();
+    }
+});
 
-    if (delay > 0) {
-        setTimeout(() => {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification("⚽ Alerta de Jogo", {
-                    body: `${game.name} começa em ${game.alertBefore} minutos`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/53/53283.png",
-                    vibrate: [200, 100, 200]
+function checkAlerts() {
+    const now = Date.now();
+    let updated = false;
+
+    games.forEach(game => {
+        const alertTime =
+            new Date(game.time).getTime() - game.alertBefore * 60000;
+
+        if (!game.notified && now >= alertTime) {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification("⚽ Alerta de Jogo", {
+                    body: game.name,
+                    icon: "icon-192.png"
                 });
             });
-        }, delay);
+
+            game.notified = true;
+            updated = true;
+        }
+    });
+
+    if (updated) {
+        localStorage.setItem("games", JSON.stringify(games));
     }
 }
 
-// Reagenda todos ao recarregar
-games.forEach(scheduleNotification);
 renderGames();

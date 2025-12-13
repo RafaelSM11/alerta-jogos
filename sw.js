@@ -1,11 +1,13 @@
-const CACHE_NAME = "alerta-jogos-v1";
+const CACHE_NAME = "alerta-jogos-v2";
 
 const FILES_TO_CACHE = [
-    "/",
-    "/index.html",
-    "/style.css",
-    "/script.js",
-    "/manifest.json"
+    "./",
+    "./index.html",
+    "./style.css",
+    "./script.js",
+    "./manifest.json",
+    "./icon-192.png",
+    "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -41,6 +43,6 @@ self.addEventListener("fetch", event => {
 self.addEventListener("notificationclick", event => {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow("/")
+        clients.openWindow("./")
     );
 });
