@@ -1,21 +1,22 @@
 const db = firebase.firestore();
 const messaging = firebase.messaging();
 
-const gameName = document.getElementById("gameName");
-const gameTime = document.getElementById("gameTime");
-const alertBefore = document.getElementById("alertBefore");
+// 🔹 ELEMENTOS
+const gameNameInput = document.getElementById("gameName");
+const gameTimeInput = document.getElementById("gameTime");
+const alertBeforeInput = document.getElementById("alertBefore");
 const gameList = document.getElementById("gameList");
 
 // 🔔 REGISTRAR PUSH
 async function registerPush() {
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
-        alert("Permissão de notificação negada");
+        console.log("Permissão de notificação negada");
         return;
     }
 
     const token = await messaging.getToken({
-        vapidKey: "BMaZ5ha0mJCVoCwz1ca-nHws4kzH9jKDK3WrmlfDgyNA0ln6zMIZFEdQqI990ninnT9BUY4R3CAv2VpQJa9cn-o"
+        vapidKey: "SUA_VAPID_KEY_AQUI"
     });
 
     await db.collection("tokens").doc(token).set({
@@ -30,22 +31,26 @@ registerPush();
 
 // ➕ ADICIONAR JOGO
 async function addGame() {
-    if (!gameName.value || !gameTime.value || !alertBefore.value) {
+    if (
+        !gameNameInput.value ||
+        !gameTimeInput.value ||
+        !alertBeforeInput.value
+    ) {
         alert("Preencha todos os campos");
         return;
     }
 
     await db.collection("games").add({
-        name: gameName.value,
-        time: new Date(gameTime.value),
-        alertBefore: Number(alertBefore.value),
+        name: gameNameInput.value,
+        time: new Date(gameTimeInput.value),
+        alertBefore: Number(alertBeforeInput.value),
         notified: false,
         createdAt: new Date()
     });
 
-    gameName.value = "";
-    gameTime.value = "";
-    alertBefore.value = "";
+    gameNameInput.value = "";
+    gameTimeInput.value = "";
+    alertBeforeInput.value = "";
 }
 
 // 📋 LISTAR JOGOS
