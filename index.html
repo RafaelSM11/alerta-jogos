@@ -1,48 +1,49 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Alerta de Jogos de Futebol</title>
+    <meta charset="UTF-8">
+    <title>Alerta de Jogos de Futebol</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0f172a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+    <!-- Manifest (opcional, não interfere na Opção A) -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <h1>⚽ Alerta de Jogos de Futebol</h1>
+    <h1>⚽ Alerta de Jogos de Futebol</h1>
 
-  <div class="form">
-    <input
-      type="text"
-      id="gameName"
-      placeholder="Nome do jogo (Ex: Flamengo x Palmeiras)"
-    />
+    <div class="form">
+        <input
+            type="text"
+            id="gameName"
+            placeholder="Nome do jogo (Ex: Flamengo x Palmeiras)"
+        />
 
-    <input
-      type="datetime-local"
-      id="gameTime"
-    />
+        <input
+            type="datetime-local"
+            id="gameTime"
+        />
 
-    <input
-      type="number"
-      id="alertBefore"
-      placeholder="Avisar quantos minutos antes?"
-      min="0"
-    />
+        <input
+            type="number"
+            id="alertBefore"
+            placeholder="Avisar quantos minutos antes?"
+            min="0"
+        />
 
-    <button onclick="addGame()">Cadastrar Jogo</button>
-  </div>
+        <button onclick="addGame()">Cadastrar Jogo</button>
+    </div>
 
-  <h2>Jogos cadastrados</h2>
-  <ul id="gameList"></ul>
+    <h2>Jogos cadastrados</h2>
 
-  <!-- SCRIPT PRINCIPAL -->
-  <script src="script.js"></script>
+    <ul id="gameList"></ul>
+
+    <!-- JS SEM MODULE -->
+    <script src="script.js"></script>
 
 </body>
 </html>
-
