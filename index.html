@@ -1,47 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Alerta de Jogos</title>
+  <meta charset="UTF-8" />
+  <title>Alerta de Jogos de Futebol</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#22c55e">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
 
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<h1>⚽ Alerta de Jogos de Futebol</h1>
+  <h1>⚽ Alerta de Jogos de Futebol</h1>
 
-<div class="form">
-    <input type="text" id="gameName" placeholder="Nome do jogo">
-    <input type="datetime-local" id="gameTime">
-    <input type="number" id="alertBefore" placeholder="Avisar quantos minutos antes">
+  <div class="form">
+    <input
+      type="text"
+      id="gameName"
+      placeholder="Nome do jogo (Ex: Flamengo x Palmeiras)"
+    />
+
+    <input
+      type="datetime-local"
+      id="gameTime"
+    />
+
+    <input
+      type="number"
+      id="alertBefore"
+      placeholder="Avisar quantos minutos antes?"
+      min="0"
+    />
+
     <button onclick="addGame()">Cadastrar Jogo</button>
-</div>
+  </div>
 
-<h2>Jogos cadastrados</h2>
-<ul id="gameList"></ul>
+  <h2>Jogos cadastrados</h2>
+  <ul id="gameList"></ul>
 
-<!-- 🔥 FIREBASE (CDN COMPAT) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="script.js"></script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDDpMU4VPe2La1KRUBSlpcivOZNn8ioo",
-    authDomain: "alerta-jogos.firebaseapp.com",
-    projectId: "alerta-jogos",
-    storageBucket: "alerta-jogos.appspot.com",
-    messagingSenderId: "944894322098",
-    appId: "1:944894322098:web:e8c3a91f2e5525e1a370ab"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-</script>
-
-<script src="script.js"></script>
 </body>
 </html>
+
